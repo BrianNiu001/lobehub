@@ -10,7 +10,13 @@ import {
 import { isCommandPressed } from '@lobechat/utils';
 import type { IEditor } from '@lobehub/editor';
 import { INSERT_MENTION_COMMAND, ReactAutoCompletePlugin, ReactMathPlugin } from '@lobehub/editor';
-import { Editor, FloatMenu, useEditorState } from '@lobehub/editor/react';
+import { Editor, useEditorState } from '@lobehub/editor/react';
+// FloatMenu was added after @lobehub/editor@4.20.2; guard until the package is updated
+const FloatMenu: React.ComponentType<any> | null =
+  (() => {
+    try { return (require('@lobehub/editor/react') as any).FloatMenu ?? null; }
+    catch { return null; }
+  })();
 import { combineKeys } from '@lobehub/ui';
 import { css, cx } from 'antd-style';
 import Fuse from 'fuse.js';
@@ -429,9 +435,11 @@ const InputEditor = memo<{
           mathPlugin: Editor.withProps(ReactMathPlugin, {
             renderComp: expand
               ? undefined
-              : (props) => (
+              : FloatMenu
+              ? (props) => (
                   <FloatMenu {...props} getPopupContainer={() => (slashMenuRef as any)?.current} />
-                ),
+                )
+              : undefined,
           }),
         });
 
