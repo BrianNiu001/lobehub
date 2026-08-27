@@ -1,8 +1,8 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { Alert, Flexbox, Icon } from '@lobehub/ui';
-import { createModal, type ModalInstance, useModalContext } from '@lobehub/ui/base-ui';
+import { Flexbox, Icon } from '@lobehub/ui';
+import { Alert, createModal, type ModalInstance, useModalContext } from '@lobehub/ui/base-ui';
 import { App, Spin, Typography, Upload } from 'antd';
 import { sha256 } from 'js-sha256';
 import { ArrowLeftRight, InboxIcon, Sparkles, Upload as UploadIcon } from 'lucide-react';
@@ -11,11 +11,11 @@ import { useTranslation } from 'react-i18next';
 
 import { usePermission } from '@/hooks/usePermission';
 import { lambdaClient } from '@/libs/trpc/client/lambda';
-import { uploadService } from '@/services/upload';
+import { UPLOAD_NETWORK_ERROR, uploadService } from '@/services/upload';
 import { useToolStore } from '@/store/tool';
 
-const UploadSkillContent = memo(() => {
-  const { t } = useTranslation(['setting', 'common']);
+export const UploadSkillContent = memo(() => {
+  const { t } = useTranslation(['setting', 'common', 'error']);
   const { close, setCanDismissByClickOutside } = useModalContext();
   const { message } = App.useApp();
   const importAgentSkillFromZip = useToolStore((s) => s.importAgentSkillFromZip);
@@ -51,8 +51,14 @@ const UploadSkillContent = memo(() => {
       await importAgentSkillFromZip({ zipFileId: result.id });
       message.success(t('agentSkillModal.importSuccess'));
       close();
-    } catch (err: any) {
-      setError(err?.message || String(err));
+    } catch (err) {
+      setError(
+        err === UPLOAD_NETWORK_ERROR
+          ? t('upload.networkError', { ns: 'error' })
+          : err instanceof Error
+            ? err.message
+            : String(err),
+      );
     } finally {
       setLoading(false);
     }
